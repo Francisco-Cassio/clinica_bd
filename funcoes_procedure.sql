@@ -41,7 +41,7 @@ BEGIN
     RETURNING id_endereco INTO v_id_endereco;
     
     INSERT INTO paciente (cpf, nome, data_nascimento, telefone, email, id_endereco, id_plano_saude)
-    VALUES (p_cpf, p_nome, p_data_nascimento, p_telefone, p_email, v_id_endereco, p_id_plano_saude);
+    VALUES (p_cpf, p_nome, p_data_nascimento, p_telefone, p_email, v_id_endereco, coalesce(p_id_plano_saude, 1));
 END;
 $$;
 

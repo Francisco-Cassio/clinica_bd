@@ -5,10 +5,15 @@ insert into forma_pagamento (nome) values
 ('dinheiro');
 
 insert into consultorio (num, andar) values 
-(101, 1),
-(102, 1),
-(201, 2),
-(202, 2);
+(1, 1),
+(2, 1),
+(3, 1),
+(4, 1),
+(5, 1),
+(1, 2),
+(2, 2),
+(3, 2),
+(4, 2);
 
 insert into especialidade (nome_especialidade, valor_consulta) values 
 ('clínico geral', 150.00),

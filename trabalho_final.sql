@@ -49,7 +49,7 @@ data_nascimento DATE NOT NULL,
 telefone VARCHAR NOT NULL,
 email VARCHAR,
 id_endereco INTEGER NOT NULL REFERENCES endereco(id_endereco),
-id_plano_saude INTEGER NOT NULL REFERENCES plano_saude(id_plano_saude)
+id_plano_saude INTEGER REFERENCES plano_saude(id_plano_saude)
 );
 
 CREATE TABLE medico_plano(
