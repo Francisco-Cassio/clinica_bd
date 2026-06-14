@@ -66,6 +66,7 @@ id_consultorio INTEGER NOT NULL REFERENCES consultorio(id_consultorio),
 crm VARCHAR NOT NULL REFERENCES medico(crm)
 );
 
+
 CREATE TABLE consulta(
 id_consulta SERIAL NOT NULL PRIMARY KEY,
 data_consulta DATE NOT NULL,
@@ -79,5 +80,12 @@ id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medic
 );
 
 
+CREATE TABLE auditoria_cancelamento (
+    id_auditoria SERIAL PRIMARY KEY,
+    id_consulta INTEGER NOT NULL,
+    cpf_paciente CHAR(11) NOT NULL,
+    data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    usuario_responsavel VARCHAR(50) NOT NULL
+);
 
 
