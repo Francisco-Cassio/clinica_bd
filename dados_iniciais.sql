@@ -24,3 +24,5 @@ insert into especialidade (nome_especialidade, valor_consulta) values
 insert into endereco (num_casa, rua, bairro, cidade, estado) values
 (123, 'rua das flores', 'centro', 'timon', 'ma'),
 (456, 'avenida piauí', 'são benedito', 'timon', 'ma');
+
+insert into plano_saude (nome) values ('particular');
