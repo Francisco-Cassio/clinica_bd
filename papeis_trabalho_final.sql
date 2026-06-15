@@ -24,3 +24,7 @@ GRANT EXECUTE ON PROCEDURE prcd_inserir_alocacao_medico, prcd_deletar_alocacao_m
 GRANT EXECUTE ON PROCEDURE prcd_inserir_medico_plano, prcd_deletar_medico_plano TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_especialidade, prcd_atualizar_valor_especialidade TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_consultorio, prcd_inserir_forma_pagamento, prcd_inserir_plano_saude, prcd_deletar_plano_saude TO gerente;
+
+GRANT SELECT ON vw_agenda_diaria TO atendente, medico;
+GRANT SELECT ON vw_historico_paciente TO medico;
+GRANT SELECT ON mvw_faturamento_gerencial, vw_relatorio_evasao, vw_ocupacao_consultorios TO gerente;
