@@ -49,7 +49,7 @@ data_nascimento DATE NOT NULL,
 telefone VARCHAR NOT NULL,
 email VARCHAR,
 id_endereco INTEGER NOT NULL REFERENCES endereco(id_endereco),
-id_plano_saude INTEGER NOT NULL REFERENCES plano_saude(id_plano_saude)
+id_plano_saude INTEGER REFERENCES plano_saude(id_plano_saude)
 );
 
 CREATE TABLE medico_plano(
@@ -81,11 +81,11 @@ id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medic
 
 
 CREATE TABLE auditoria_cancelamento (
-    id_auditoria SERIAL PRIMARY KEY,
-    id_consulta INTEGER NOT NULL,
-    cpf_paciente CHAR(11) NOT NULL,
-    data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    usuario_responsavel VARCHAR(50) NOT NULL
+id_auditoria SERIAL PRIMARY KEY,
+id_consulta INTEGER NOT null REFERENCES consulta(id_consulta) ON DELETE CASCADE,
+cpf_paciente CHAR(11) NOT NULL,
+data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+usuario_responsavel VARCHAR(50) NOT NULL
 );
 
 
