@@ -9,7 +9,8 @@ REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
 GRANT SELECT ON paciente, medico, consultorio, alocacao_medico, consulta, especialidade, plano_saude, forma_pagamento, endereco TO atendente;
 GRANT SELECT, INSERT ON auditoria_cancelamento TO atendente;
 
-GRANT SELECT ON paciente, consulta, alocacao_medico, consultorio TO medico;
+GRANT SELECT ON consulta, alocacao_medico, consultorio TO medico;
+GRANT SELECT (cpf, nome, data_nascimento) ON paciente TO medico;
 
 GRANT SELECT ON atendente, medico, plano_saude, forma_pagamento, especialidade, consultorio, endereco, auditoria_cancelamento, medico_plano TO gerente;
 GRANT SELECT (id_consulta, status, cpf_paciente, id_alocacao_medico) ON consulta TO gerente;
