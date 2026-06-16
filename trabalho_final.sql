@@ -22,7 +22,11 @@ num_casa INTEGER NOT NULL,
 rua VARCHAR,
 bairro VARCHAR NOT NULL,
 cidade VARCHAR NOT NULL,
-estado VARCHAR NOT NULL
+estado CHAR(2) NOT NULL CHECK (
+    estado IN ('AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 
+               'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 
+               'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO')
+)
 );
 
 CREATE TABLE atendente(
