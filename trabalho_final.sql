@@ -62,7 +62,7 @@ CREATE TABLE alocacao_medico(
 id_alocacao_medico SERIAL NOT NULL PRIMARY KEY,
 data_alocacao DATE NOT NULL,
 horario_entrada TIME NOT NULL,
-horario_saida TIME NOT NULL,,
+horario_saida TIME NOT NULL,
 id_consultorio INTEGER NOT NULL REFERENCES consultorio(id_consultorio),
 crm VARCHAR NOT NULL REFERENCES medico(crm)
 );
