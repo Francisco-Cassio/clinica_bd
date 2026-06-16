@@ -199,6 +199,10 @@ BEGIN
 		RAISE EXCEPTION 'Por favor, preencha os campos necessários';
 	END IF;
 	
+    IF EXISTS (SELECT 1 FROM alocacao_medico WHERE crm = p_crm) THEN
+        RAISE EXCEPTION 'Não é possível excluir o médico. O profissional possui alocações de horários ou consultas ativas vinculadas ao seu CRM.';
+    END IF;
+
     DELETE FROM medico WHERE crm = p_crm;
 END;
 $$;
