@@ -88,3 +88,27 @@ FROM consultorio con
 LEFT JOIN alocacao_medico am ON con.id_consultorio = am.id_consultorio
 GROUP BY con.id_consultorio, con.num, con.andar
 ORDER BY total_alocacoes_medicas DESC, con.num ASC;
+
+
+CREATE OR REPLACE VIEW vw_verificar_disponiveis AS
+SELECT 
+    am.id_alocacao_medico,
+    am.data_alocacao,
+    am.horario_entrada,
+    am.horario_saida,
+    m.nome AS nome_medico,
+    e.nome_especialidade,
+    con.num AS numero_sala,
+    con.andar
+FROM alocacao_medico am
+INNER JOIN medico m ON am.crm = m.crm
+INNER JOIN especialidade e ON m.id_especialidade = e.id_especialidade
+INNER JOIN consultorio con ON am.id_consultorio = con.id_consultorio
+WHERE NOT EXISTS (
+    SELECT 1 
+    FROM consulta c
+    WHERE c.id_alocacao_medico = am.id_alocacao_medico
+      AND c.status <> 'cancelada'
+) 
+AND am.data_alocacao >= CURRENT_DATE
+ORDER BY am.data_alocacao ASC, am.horario_entrada ASC;
