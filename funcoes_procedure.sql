@@ -29,16 +29,26 @@ BEGIN
         RAISE EXCEPTION 'Bairro, cidade e estado do endereço são de preenchimento obrigatório.';
     END IF;
 
-    IF length(p_cpf) <> 11 	OR p_cpf IS NULL THEN
-		RAISE EXCEPTION 'CPF inválido. O documento deve ter exatamente 11 dígitos.'; 
+    IF NOT fn_validar_cpf(p_cpf) THEN
+		RAISE EXCEPTION 'CPF inválido ou possui dígitos verificadores incorretos.'; 
 	END IF;
     IF p_data_nascimento > CURRENT_DATE THEN 
 		RAISE EXCEPTION 'A data de nascimento não pode estar no futuro.'; 
 	END IF;
 
-    INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
-    VALUES(p_num_casa, p_rua, p_bairro, p_cidade, p_estado)
-    RETURNING id_endereco INTO v_id_endereco;
+    SELECT id_endereco INTO v_id_endereco 
+    FROM endereco 
+    WHERE num_casa = p_num_casa 
+      AND lower(trim(rua)) = lower(trim(p_rua))
+      AND lower(trim(bairro)) = lower(trim(p_bairro))
+      AND lower(trim(cidade)) = lower(trim(p_cidade))
+      AND lower(trim(p_estado)) = lower(trim(p_estado));
+
+    IF v_id_endereco IS NULL THEN
+        INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
+        VALUES(p_num_casa, p_rua, p_bairro, p_cidade, p_estado)
+        RETURNING id_endereco INTO v_id_endereco;
+    END IF;
     
     INSERT INTO paciente (cpf, nome, data_nascimento, telefone, email, id_endereco, id_plano_saude)
     VALUES (p_cpf, p_nome, p_data_nascimento, p_telefone, p_email, v_id_endereco, coalesce(p_id_plano_saude, 1));
