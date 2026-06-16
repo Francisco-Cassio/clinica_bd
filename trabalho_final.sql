@@ -1,7 +1,7 @@
 CREATE TABLE especialidade(
 id_especialidade SERIAL NOT NULL PRIMARY KEY,
 nome_especialidade VARCHAR NOT NULL,
-valor_consulta NUMERIC NOT NULL
+valor_consulta NUMERIC NOT null CHECK (valor_consulta > 0)
 );
 
 CREATE TABLE plano_saude(
@@ -11,8 +11,9 @@ nome VARCHAR NOT NULL
 
 CREATE TABLE consultorio(
 id_consultorio SERIAL NOT NULL PRIMARY KEY,
-num INTEGER,
-andar INTEGER
+num INTEGER NOT NULL,
+andar INTEGER NOT NULL,
+CONSTRAINT uq_consultorio_sala_andar UNIQUE(num, andar)
 );
 
 CREATE TABLE endereco(
@@ -28,7 +29,7 @@ CREATE TABLE atendente(
 id_atendente SERIAL NOT NULL PRIMARY KEY,
 nome VARCHAR NOT NULL,
 expediente CHAR(1) NOT NULL CHECK(expediente='m' or expediente='v'),
-salario NUMERIC NOT NULL
+salario NUMERIC NOT NULL CHECK(salario > 0)
 );
 
 CREATE TABLE forma_pagamento(
@@ -76,7 +77,7 @@ status VARCHAR NOT NULL CHECK(status='agendada' OR status='acontecendo' OR statu
 id_atendente INTEGER NOT NULL REFERENCES atendente(id_atendente),
 id_forma_pagamento INTEGER NOT NULL REFERENCES forma_pagamento(id_forma_pagamento),
 id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medico),
-valor_pago NUMERIC(10,2) NOT NULL
+valor_pago NUMERIC(10,2) NOT null CHECK(valor_pago > 0)
 );
 
 

@@ -15,18 +15,16 @@ GRANT SELECT ON atendente, medico, plano_saude, forma_pagamento, especialidade, 
 GRANT SELECT (id_consulta, status, cpf_paciente, id_alocacao_medico) ON consulta TO gerente;
 GRANT SELECT (cpf, nome, data_nascimento) ON paciente TO gerente;
 
--- atendente faz: inserção e atualização de pacientes e agendamentos
 GRANT EXECUTE ON PROCEDURE prcd_inserir_paciente, prcd_atualizar_paciente TO atendente;
 GRANT EXECUTE ON PROCEDURE prcd_agendar_consulta, prcd_cancelar_consulta TO atendente;
 GRANT EXECUTE ON PROCEDURE prcd_encerrar_consulta TO medico;
 
--- gerente faz: controle de exclusões, RH, especialidades e infraestrutura
 GRANT EXECUTE ON PROCEDURE prcd_inserir_medico, prcd_atualizar_medico, prcd_deletar_medico, prcd_deletar_paciente TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_atendente, prcd_reajustar_salario_atendente, prcd_reajustar_expediente_atendente, prcd_deletar_atendente TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_alocacao_medico, prcd_deletar_alocacao_medico TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_medico_plano, prcd_deletar_medico_plano TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_especialidade, prcd_atualizar_valor_especialidade TO gerente;
-GRANT EXECUTE ON PROCEDURE prcd_inserir_consultorio, prcd_inserir_forma_pagamento, p_nome, prcd_inserir_plano_saude, prcd_deletar_plano_saude TO gerente;
+GRANT EXECUTE ON PROCEDURE prcd_inserir_consultorio, prcd_inserir_forma_pagamento, prcd_inserir_plano_saude, prcd_deletar_plano_saude TO gerente;
 
 GRANT SELECT ON vw_agenda_diaria TO atendente, medico;
 GRANT SELECT ON vw_historico_paciente TO medico;

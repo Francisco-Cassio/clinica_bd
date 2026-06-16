@@ -1,4 +1,3 @@
--- Trigger e função verificar conflito no momento de agendar consulta
 CREATE OR REPLACE FUNCTION fn_verificar_conflito_consulta()
 RETURNS TRIGGER AS $$
 DECLARE
@@ -10,13 +9,11 @@ BEGIN
         RETURN NEW;
     END IF;
 
-    -- Busca os dados de intervalo de tempo da alocação correspondente
     SELECT data_alocacao, horario_entrada, horario_saida
     INTO v_data_alocacao, v_entrada, v_saida
     FROM alocacao_medico
     WHERE id_alocacao_medico = NEW.id_alocacao_medico;
 
-    -- Regra 1: O slot só pode ter uma consulta
     IF EXISTS (
         SELECT 1 
         FROM consulta 
@@ -28,7 +25,6 @@ BEGIN
             NEW.id_alocacao_medico;
     END IF;
 
-    -- Regra 2: O paciente não pode estar em dois lugares ao mesmo tempo (Matemática de sobreposição)
     IF EXISTS (
         SELECT 1 
         FROM consulta c
@@ -57,7 +53,6 @@ EXECUTE FUNCTION fn_verificar_conflito_consulta();
 CREATE OR REPLACE FUNCTION fn_verificar_conflito_alocacao()
 RETURNS TRIGGER AS $$
 BEGIN
-    -- Verifica conflito da SALA (Sobreposição de tempo)
     IF EXISTS (
         SELECT 1 
         FROM alocacao_medico 
@@ -71,7 +66,6 @@ BEGIN
             NEW.id_consultorio, NEW.data_alocacao;
     END IF;
 
-    -- Verifica conflito do MÉDICO (Sobreposição de tempo)
     IF EXISTS (
         SELECT 1 
         FROM alocacao_medico 

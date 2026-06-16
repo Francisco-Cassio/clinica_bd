@@ -29,16 +29,26 @@ BEGIN
         RAISE EXCEPTION 'Bairro, cidade e estado do endereço são de preenchimento obrigatório.';
     END IF;
 
-    IF length(p_cpf) <> 11 	OR p_cpf IS NULL THEN
-		RAISE EXCEPTION 'CPF inválido. O documento deve ter exatamente 11 dígitos.'; 
+    IF NOT fn_validar_cpf(p_cpf) THEN
+		RAISE EXCEPTION 'CPF inválido ou possui dígitos verificadores incorretos.'; 
 	END IF;
     IF p_data_nascimento > CURRENT_DATE THEN 
 		RAISE EXCEPTION 'A data de nascimento não pode estar no futuro.'; 
 	END IF;
 
-    INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
-    VALUES(p_num_casa, p_rua, p_bairro, p_cidade, p_estado)
-    RETURNING id_endereco INTO v_id_endereco;
+    SELECT id_endereco INTO v_id_endereco 
+    FROM endereco 
+    WHERE num_casa = p_num_casa 
+      AND lower(trim(rua)) = lower(trim(p_rua))
+      AND lower(trim(bairro)) = lower(trim(p_bairro))
+      AND lower(trim(cidade)) = lower(trim(p_cidade))
+      AND lower(trim(p_estado)) = lower(trim(p_estado));
+
+    IF v_id_endereco IS NULL THEN
+        INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
+        VALUES(p_num_casa, p_rua, p_bairro, p_cidade, p_estado)
+        RETURNING id_endereco INTO v_id_endereco;
+    END IF;
     
     INSERT INTO paciente (cpf, nome, data_nascimento, telefone, email, id_endereco, id_plano_saude)
     VALUES (p_cpf, p_nome, p_data_nascimento, p_telefone, p_email, v_id_endereco, coalesce(p_id_plano_saude, 1));
@@ -126,6 +136,21 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE prcd_deletar_paciente(p_cpf CHAR(11))
+LANGUAGE plpgsql 
+SECURITY DEFINER AS $$
+BEGIN
+    IF p_cpf IS NULL OR length(p_cpf) <> 11 THEN
+        RAISE EXCEPTION 'Informe um CPF de paciente válido com 11 dígitos para realizar a exclusão.';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM paciente WHERE cpf = p_cpf) THEN
+        RAISE EXCEPTION 'Paciente com o CPF % não foi encontrado no sistema.', p_cpf;
+    END IF;
+
+    DELETE FROM paciente WHERE cpf = p_cpf;
+END;
+$$;
 
 
 -- Procedures para inserir/atualizar/deletar médico
@@ -302,12 +327,42 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE prcd_iniciar_consulta(
+    p_id_consulta INTEGER
+)
+LANGUAGE plpgsql 
+SECURITY DEFINER AS $$
+DECLARE
+    v_status_atual VARCHAR;
+BEGIN
+    IF p_id_consulta IS NULL OR p_id_consulta <= 0 THEN
+        RAISE EXCEPTION 'Informe um ID de consulta válido.';
+    END IF;
+
+    SELECT status INTO v_status_atual FROM consulta WHERE id_consulta = p_id_consulta;
+
+    IF v_status_atual IS NULL THEN
+        RAISE EXCEPTION 'Consulta com ID % não encontrada no sistema.', p_id_consulta;
+    END IF;
+
+    IF v_status_atual <> 'agendada' THEN
+        RAISE EXCEPTION 'Não é possível iniciar esta consulta. Status atual é "%". Apenas consultas "agendadas" podem ser iniciadas.', v_status_atual;
+    END IF;
+
+    UPDATE consulta 
+    SET status = 'acontecendo'
+    WHERE id_consulta = p_id_consulta;
+END;
+$$;
+
 CREATE OR REPLACE PROCEDURE prcd_encerrar_consulta(
     p_id_consulta INTEGER,
     p_diagnostico VARCHAR
 )
 LANGUAGE plpgsql 
 SECURITY DEFINER AS $$
+DECLARE
+    v_status_atual VARCHAR;
 BEGIN
     IF p_id_consulta IS NULL OR p_id_consulta <= 0 THEN
         RAISE EXCEPTION 'Informe um ID de consulta válido.';
@@ -315,6 +370,16 @@ BEGIN
 
     IF trim(p_diagnostico) = '' OR p_diagnostico IS NULL THEN
         RAISE EXCEPTION 'A consulta não pode ser encerrada sem um diagnóstico válido preenchido.';
+    END IF;
+
+    SELECT status INTO v_status_atual FROM consulta WHERE id_consulta = p_id_consulta;
+
+    IF v_status_atual IS NULL THEN
+        RAISE EXCEPTION 'Consulta com ID % não encontrada no sistema.', p_id_consulta;
+    END IF;
+
+    IF v_status_atual NOT IN ('agendada', 'acontecendo') THEN
+        RAISE EXCEPTION 'Não é possível encerrar esta consulta. Status atual é "%". Apenas consultas "agendadas" ou "acontecendo" podem ser encerradas.', v_status_atual;
     END IF;
 
     UPDATE consulta 
