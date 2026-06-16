@@ -29,8 +29,8 @@ BEGIN
         RAISE EXCEPTION 'Bairro, cidade e estado do endereço são de preenchimento obrigatório.';
     END IF;
 
-    IF NOT fn_validar_cpf(p_cpf) THEN
-		RAISE EXCEPTION 'CPF inválido ou possui dígitos verificadores incorretos.'; 
+	IF length(p_cpf) <> 11 OR p_cpf IS NULL THEN
+		RAISE EXCEPTION 'O CPF do paciente é obrigatório e deve conter 11 dígitos.'; 
 	END IF;
     IF p_data_nascimento > CURRENT_DATE THEN 
 		RAISE EXCEPTION 'A data de nascimento não pode estar no futuro.'; 
@@ -42,11 +42,11 @@ BEGIN
       AND lower(trim(rua)) = lower(trim(p_rua))
       AND lower(trim(bairro)) = lower(trim(p_bairro))
       AND lower(trim(cidade)) = lower(trim(p_cidade))
-      AND lower(trim(p_estado)) = lower(trim(p_estado));
-
-    IF v_id_endereco IS NULL THEN
-        INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
-        VALUES(p_num_casa, p_rua, p_bairro, p_cidade, p_estado)
+      AND lower(trim(estado)) = lower(trim(p_estado));
+	
+	IF v_id_endereco IS NULL THEN
+        INSERT INTO endereco(num_casa, rua, bairro, city, estado)
+        VALUES(p_num_casa, p_rua, p_bairro, p_cidade, upper(trim(p_estado)))
         RETURNING id_endereco INTO v_id_endereco;
     END IF;
     
@@ -186,6 +186,10 @@ BEGIN
 		RAISE EXCEPTION 'O nome do médico não pode estar vazio.'; 
 	END IF;
 	
+    IF NOT EXISTS (SELECT 1 FROM medico WHERE crm = p_crm) THEN
+        RAISE EXCEPTION 'Médico com o CRM % não foi encontrado no sistema.', p_crm;
+    END IF;
+	
     UPDATE medico SET nome = p_nome, id_especialidade = p_id_especialidade WHERE crm = p_crm;
 END;
 $$;
@@ -199,6 +203,10 @@ BEGIN
 		RAISE EXCEPTION 'Por favor, preencha os campos necessários';
 	END IF;
 	
+    IF EXISTS (SELECT 1 FROM alocacao_medico WHERE crm = p_crm) THEN
+        RAISE EXCEPTION 'Não é possível excluir o médico. O profissional possui alocações de horários ou consultas ativas vinculadas ao seu CRM.';
+    END IF;
+
     DELETE FROM medico WHERE crm = p_crm;
 END;
 $$;
@@ -240,10 +248,14 @@ BEGIN
 		RAISE EXCEPTION 'Insira um salário válido';
 	END IF;
 	
+    IF NOT EXISTS (SELECT 1 FROM atendente WHERE id_atendente = p_id_atendente) THEN
+        RAISE EXCEPTION 'Atendente com ID % não foi encontrado para reajuste salarial.', p_id_atendente;
+    END IF;
+	
     UPDATE atendente 
     SET salario = p_novo_salario
     WHERE id_atendente = p_id_atendente;
-end;
+END;
 $$;
 
 
@@ -257,6 +269,10 @@ BEGIN
 	IF p_novo_expediente NOT IN ('m', 'v') OR p_novo_expediente IS NULL THEN
 		RAISE EXCEPTION 'Informe um expediente válido';
 	END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM atendente WHERE id_atendente = p_id_atendente) THEN
+        RAISE EXCEPTION 'Atendente com ID % não foi encontrado para alteração de expediente.', p_id_atendente;
+    END IF;
 
 	UPDATE atendente
 	SET expediente = p_novo_expediente
@@ -395,13 +411,26 @@ CREATE OR REPLACE PROCEDURE prcd_cancelar_consulta(
 )
 LANGUAGE plpgsql 
 SECURITY DEFINER AS $$
+DECLARE
+    v_status_atual VARCHAR;
 BEGIN
     IF p_id_consulta IS NULL OR p_id_consulta <= 0 THEN
         RAISE EXCEPTION 'Informe um ID de consulta válido.';
     END IF;
 
+    SELECT status INTO v_status_atual FROM consulta WHERE id_consulta = p_id_consulta;
+
+    IF v_status_atual IS NULL THEN
+        RAISE EXCEPTION 'Consulta com ID % não encontrada no sistema.', p_id_consulta;
+    END IF;
+
+    IF v_status_atual IN ('realizada', 'cancelada') THEN
+        RAISE EXCEPTION 'Não é possível cancelar esta consulta. Status atual é "%".', v_status_atual;
+    END IF;
+
     UPDATE consulta 
-    SET status = 'cancelada', diagnostico = 'Consulta cancelada.'
+    SET status = 'cancelada', 
+        diagnostico = 'Consulta cancelada.'
     WHERE id_consulta = p_id_consulta;
 END;
 $$;
@@ -477,6 +506,15 @@ SECURITY DEFINER AS $$
 BEGIN
     IF p_id_alocacao_medico <= 0 OR p_id_alocacao_medico IS NULL THEN
         RAISE EXCEPTION 'Informe os dados corretamente para realizar a exclusão!';
+    END IF;
+    
+    IF EXISTS (
+        SELECT 1 
+        FROM consulta 
+        WHERE id_alocacao_medico = p_id_alocacao_medico 
+          AND status <> 'cancelada'
+    ) THEN
+        RAISE EXCEPTION 'Não é possível excluir esta alocação. O horário possui consultas ativas vinculadas. Cancele os agendamentos antes de prosseguir.';
     END IF;
     
     DELETE FROM alocacao_medico WHERE id_alocacao_medico = p_id_alocacao_medico;

@@ -22,7 +22,11 @@ num_casa INTEGER NOT NULL,
 rua VARCHAR,
 bairro VARCHAR NOT NULL,
 cidade VARCHAR NOT NULL,
-estado VARCHAR NOT NULL
+estado CHAR(2) NOT NULL CHECK (
+    estado IN ('AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 
+               'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 
+               'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO')
+)
 );
 
 CREATE TABLE atendente(
@@ -77,14 +81,14 @@ status VARCHAR NOT NULL CHECK(status='agendada' OR status='acontecendo' OR statu
 id_atendente INTEGER NOT NULL REFERENCES atendente(id_atendente),
 id_forma_pagamento INTEGER NOT NULL REFERENCES forma_pagamento(id_forma_pagamento),
 id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medico),
-valor_pago NUMERIC(10,2) NOT null CHECK(valor_pago > 0)
+valor_pago NUMERIC(10,2) NOT null CHECK(valor_pago >= 0)
 );
 
 
 CREATE TABLE auditoria_cancelamento (
 id_auditoria SERIAL PRIMARY KEY,
-id_consulta INTEGER NOT NULL,
-cpf_paciente CHAR(11) NOT NULL,
+id_consulta INTEGER REFERENCES consulta(id_consulta) ON DELETE SET NULL,
+cpf_paciente CHAR(11) NOT NULL REFERENCES paciente(cpf),
 data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 usuario_responsavel VARCHAR(50) NOT NULL
 );
