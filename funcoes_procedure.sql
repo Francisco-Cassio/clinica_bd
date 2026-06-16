@@ -42,7 +42,7 @@ BEGIN
       AND lower(trim(rua)) = lower(trim(p_rua))
       AND lower(trim(bairro)) = lower(trim(p_bairro))
       AND lower(trim(cidade)) = lower(trim(p_cidade))
-      AND lower(trim(p_estado)) = lower(trim(p_estado));
+      AND lower(trim(estado)) = lower(trim(p_estado));
 
     IF v_id_endereco IS NULL THEN
         INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
