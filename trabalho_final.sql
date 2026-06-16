@@ -62,7 +62,7 @@ CREATE TABLE alocacao_medico(
 id_alocacao_medico SERIAL NOT NULL PRIMARY KEY,
 data_alocacao DATE NOT NULL,
 horario_entrada TIME NOT NULL,
-horario_saida TIME NOT NULL,,
+horario_saida TIME NOT NULL,
 id_consultorio INTEGER NOT NULL REFERENCES consultorio(id_consultorio),
 crm VARCHAR NOT NULL REFERENCES medico(crm)
 );
@@ -75,7 +75,7 @@ diagnostico VARCHAR,
 status VARCHAR NOT NULL CHECK(status='agendada' OR status='acontecendo' OR status='realizada' or status='cancelada'),
 id_atendente INTEGER NOT NULL REFERENCES atendente(id_atendente),
 id_forma_pagamento INTEGER NOT NULL REFERENCES forma_pagamento(id_forma_pagamento),
-id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medico)
+id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medico),
 valor_pago NUMERIC(10,2) NOT NULL
 );
 
