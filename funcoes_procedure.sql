@@ -496,6 +496,15 @@ BEGIN
         RAISE EXCEPTION 'Informe os dados corretamente para realizar a exclusão!';
     END IF;
     
+    IF EXISTS (
+        SELECT 1 
+        FROM consulta 
+        WHERE id_alocacao_medico = p_id_alocacao_medico 
+          AND status <> 'cancelada'
+    ) THEN
+        RAISE EXCEPTION 'Não é possível excluir esta alocação. O horário possui consultas ativas vinculadas. Cancele os agendamentos antes de prosseguir.';
+    END IF;
+    
     DELETE FROM alocacao_medico WHERE id_alocacao_medico = p_id_alocacao_medico;
 END;
 $$;
