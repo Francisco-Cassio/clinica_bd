@@ -12,16 +12,13 @@ GRANT SELECT, INSERT ON auditoria_cancelamento TO atendente;
 GRANT SELECT ON paciente, consulta, alocacao_medico, consultorio TO medico;
 
 GRANT SELECT ON atendente, medico, plano_saude, forma_pagamento, especialidade, consultorio, endereco, auditoria_cancelamento, medico_plano TO gerente;
-
 GRANT SELECT (id_consulta, status, cpf_paciente, id_alocacao_medico) ON consulta TO gerente;
 GRANT SELECT (cpf, nome, data_nascimento) ON paciente TO gerente;
 
--- atendente faz: inserção e atualização de pacientes e agendamentos
 GRANT EXECUTE ON PROCEDURE prcd_inserir_paciente, prcd_atualizar_paciente TO atendente;
 GRANT EXECUTE ON PROCEDURE prcd_agendar_consulta, prcd_cancelar_consulta TO atendente;
 GRANT EXECUTE ON PROCEDURE prcd_encerrar_consulta TO medico;
 
--- gerente faz: controle de exclusões, RH, especialidades e infraestrutura
 GRANT EXECUTE ON PROCEDURE prcd_inserir_medico, prcd_atualizar_medico, prcd_deletar_medico, prcd_deletar_paciente TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_atendente, prcd_reajustar_salario_atendente, prcd_reajustar_expediente_atendente, prcd_deletar_atendente TO gerente;
 GRANT EXECUTE ON PROCEDURE prcd_inserir_alocacao_medico, prcd_deletar_alocacao_medico TO gerente;
