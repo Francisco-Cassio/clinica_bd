@@ -28,3 +28,4 @@ GRANT EXECUTE ON PROCEDURE prcd_inserir_consultorio, prcd_inserir_forma_pagament
 GRANT SELECT ON vw_agenda_diaria TO atendente, medico;
 GRANT SELECT ON vw_historico_paciente TO medico;
 GRANT SELECT ON mvw_faturamento_gerencial, vw_relatorio_evasao, vw_ocupacao_consultorios TO gerente;
+GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA public TO atendente, gerente;
