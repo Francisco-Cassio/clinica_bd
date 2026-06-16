@@ -83,8 +83,8 @@ valor_pago NUMERIC(10,2) NOT null CHECK(valor_pago >= 0)
 
 CREATE TABLE auditoria_cancelamento (
 id_auditoria SERIAL PRIMARY KEY,
-id_consulta INTEGER NOT NULL,
-cpf_paciente CHAR(11) NOT NULL,
+id_consulta INTEGER REFERENCES consulta(id_consulta) ON DELETE SET NULL,
+cpf_paciente CHAR(11) NOT NULL REFERENCES paciente(cpf),
 data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 usuario_responsavel VARCHAR(50) NOT NULL
 );
