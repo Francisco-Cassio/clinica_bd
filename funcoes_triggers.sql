@@ -1,34 +1,46 @@
---trigger e função verificar conflito no momento de agendar consulta
+-- Trigger e função verificar conflito no momento de agendar consulta
 CREATE OR REPLACE FUNCTION fn_verificar_conflito_consulta()
 RETURNS TRIGGER AS $$
+DECLARE
+    v_data_alocacao DATE;
+    v_entrada TIME;
+    v_saida TIME;
 BEGIN
     IF NEW.status = 'cancelada' THEN
         RETURN NEW;
     END IF;
-	
+
+    -- Busca os dados de intervalo de tempo da alocação correspondente
+    SELECT data_alocacao, horario_entrada, horario_saida
+    INTO v_data_alocacao, v_entrada, v_saida
+    FROM alocacao_medico
+    WHERE id_alocacao_medico = NEW.id_alocacao_medico;
+
+    -- Regra 1: O slot só pode ter uma consulta
     IF EXISTS (
         SELECT 1 
         FROM consulta 
         WHERE id_alocacao_medico = NEW.id_alocacao_medico 
-          AND data_consulta = NEW.data_consulta 
-          AND hora_consulta = NEW.hora_consulta
-          AND status <> 'cancelada' -- Consultas canceladas não geram conflito
-          AND id_consulta IS DISTINCT FROM NEW.id_consulta -- Ignora a si mesma em caso de UPDATE
-    ) THEN
-        RAISE EXCEPTION 'Conflito de Agenda Médica: Já existe uma consulta marcada para este médico no dia % às %.', 
-            NEW.data_consulta, NEW.hora_consulta;
-    END IF;
-
-    IF EXISTS (
-        SELECT 1 
-        FROM consulta 
-        WHERE cpf_paciente = NEW.cpf_paciente 
-          AND data_consulta = NEW.data_consulta 
-          AND hora_consulta = NEW.hora_consulta
-          AND status <> 'cancelada'
+          AND status <> 'cancelada' 
           AND id_consulta IS DISTINCT FROM NEW.id_consulta
     ) THEN
-        RAISE EXCEPTION 'Conflito de Paciente: O paciente (CPF: %) já possui outra consulta agendada exatamente para este mesmo dia e horário.', 
+        RAISE EXCEPTION 'Conflito de Agenda: Este slot médico (Alocação %) já está ocupado por outro paciente.', 
+            NEW.id_alocacao_medico;
+    END IF;
+
+    -- Regra 2: O paciente não pode estar em dois lugares ao mesmo tempo (Matemática de sobreposição)
+    IF EXISTS (
+        SELECT 1 
+        FROM consulta c
+        INNER JOIN alocacao_medico am ON c.id_alocacao_medico = am.id_alocacao_medico
+        WHERE c.cpf_paciente = NEW.cpf_paciente 
+          AND am.data_alocacao = v_data_alocacao 
+          AND am.horario_entrada < v_saida
+          AND am.horario_saida > v_entrada
+          AND c.status <> 'cancelada'
+          AND c.id_consulta IS DISTINCT FROM NEW.id_consulta
+    ) THEN
+        RAISE EXCEPTION 'Conflito de Paciente: O paciente (CPF: %) já tem outra consulta marcada que conflita com este horário.', 
             NEW.cpf_paciente;
     END IF;
 
@@ -41,32 +53,35 @@ BEFORE INSERT OR UPDATE ON consulta
 FOR EACH ROW
 EXECUTE FUNCTION fn_verificar_conflito_consulta();
 
-
 --trigger e função para verificar conflito quanto a alocação do médico
 CREATE OR REPLACE FUNCTION fn_verificar_conflito_alocacao()
 RETURNS TRIGGER AS $$
 BEGIN
-	IF EXISTS (
+    -- Verifica conflito da SALA (Sobreposição de tempo)
+    IF EXISTS (
         SELECT 1 
         FROM alocacao_medico 
         WHERE id_consultorio = NEW.id_consultorio 
           AND data_alocacao = NEW.data_alocacao 
-          AND horario = NEW.horario
+          AND horario_entrada < NEW.horario_saida
+          AND horario_saida > NEW.horario_entrada
           AND id_alocacao_medico IS DISTINCT FROM NEW.id_alocacao_medico
     ) THEN
-        RAISE EXCEPTION 'Conflito de Consultório: A sala % já está reservada para este dia (%) e horário (%).', 
-            NEW.id_consultorio, NEW.data_alocacao, NEW.horario;
+        RAISE EXCEPTION 'Conflito de Consultório: A sala % já está reservada para este dia (%) neste intervalo de tempo.', 
+            NEW.id_consultorio, NEW.data_alocacao;
     END IF;
 
+    -- Verifica conflito do MÉDICO (Sobreposição de tempo)
     IF EXISTS (
         SELECT 1 
         FROM alocacao_medico 
         WHERE crm = NEW.crm 
           AND data_alocacao = NEW.data_alocacao 
-          AND horario = NEW.horario
+          AND horario_entrada < NEW.horario_saida
+          AND horario_saida > NEW.horario_entrada
           AND id_alocacao_medico IS DISTINCT FROM NEW.id_alocacao_medico
     ) THEN
-        RAISE EXCEPTION 'Conflito de Médico: O médico (CRM: %) já possui alocação em outro consultório exatamente para este mesmo dia e horário.', 
+        RAISE EXCEPTION 'Conflito de Médico: O médico (CRM: %) já possui alocação em outro consultório neste mesmo intervalo.', 
             NEW.crm;
     END IF;
 

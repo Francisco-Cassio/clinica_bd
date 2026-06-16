@@ -7,28 +7,21 @@ SELECT
     m.nome AS medico_responsavel,
     e.nome_especialidade AS especialidade,
     c.diagnostico
-FROM 
-    paciente p
-INNER JOIN 
-    consulta c ON p.cpf = c.cpf_paciente
-INNER JOIN 
-    alocacao_medico am ON c.id_alocacao_medico = am.id_alocacao_medico
-INNER JOIN 
-    medico m ON am.crm = m.crm
-INNER JOIN 
-    especialidade e ON m.id_especialidade = e.id_especialidade
-WHERE 
-    c.status = 'realizada'
-ORDER BY 
-    am.data_alocacao DESC;
+FROM paciente p
+INNER JOIN consulta c ON p.cpf = c.cpf_paciente
+INNER JOIN alocacao_medico am ON c.id_alocacao_medico = am.id_alocacao_medico
+INNER JOIN medico m ON am.crm = m.crm
+INNER JOIN especialidade e ON m.id_especialidade = e.id_especialidade
+WHERE c.status = 'realizada'
+ORDER BY am.data_alocacao DESC;
 
 
 CREATE OR REPLACE VIEW vw_agenda_diaria AS
 SELECT 
     c.id_consulta,
-    am.data_alocacao AS data_consulta, 
-    am.horario_entrada,               
-    am.horario_saida,                 
+    am.data_alocacao AS data_consulta,
+    am.horario_entrada,        
+    am.horario_saida,          
     p.nome AS nome_paciente,
     p.telefone AS telefone_paciente,
     m.nome AS nome_medico,
