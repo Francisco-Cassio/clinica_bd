@@ -11,7 +11,7 @@ GRANT SELECT, INSERT ON auditoria_cancelamento TO atendente;
 
 GRANT SELECT ON paciente, consulta, alocacao_medico, consultorio TO medico;
 
-GRANT SELECT ON atendente, medico, plano_saude, forma_pagamento, especialidade, consultorio, endereco, auditoria_cancelamento TO gerente;
+GRANT SELECT ON atendente, medico, plano_saude, forma_pagamento, especialidade, consultorio, endereco, auditoria_cancelamento, medico_plano TO gerente;
 GRANT SELECT (id_consulta, data_consulta, hora_consulta, status, cpf_paciente) ON consulta TO gerente;
 GRANT SELECT (cpf, nome, data_nascimento) ON paciente TO gerente;
 
