@@ -247,6 +247,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER AS $$
 DECLARE
     v_data_alocacao DATE;
+    v_valor_atual NUMERIC;
 BEGIN
     IF p_cpf_paciente IS NULL OR length(p_cpf_paciente) <> 11 THEN
         RAISE EXCEPTION 'O CPF do paciente é obrigatório e deve conter 11 dígitos.';
@@ -258,9 +259,12 @@ BEGIN
 	   		RAISE EXCEPTION 'Os IDs de alocação, forma de pagamento e atendente devem ser informados e válidos.';
     END IF;
 
-    SELECT data_alocacao INTO v_data_alocacao 
-    FROM alocacao_medico 
-    WHERE id_alocacao_medico = p_id_alocacao_medico;
+    SELECT am.data_alocacao, e.valor_consulta 
+    INTO v_data_alocacao, v_valor_atual
+    FROM alocacao_medico am
+    INNER JOIN medico m ON am.crm = m.crm
+    INNER JOIN especialidade e ON m.id_especialidade = e.id_especialidade
+    WHERE am.id_alocacao_medico = p_id_alocacao_medico;
 
     IF v_data_alocacao IS NULL THEN
         RAISE EXCEPTION 'A alocação médica informada (ID %) não existe no sistema.', p_id_alocacao_medico;
@@ -272,11 +276,11 @@ BEGIN
 
     INSERT INTO consulta (
         status, diagnostico, 
-        cpf_paciente, id_alocacao_medico, id_forma_pagamento, id_atendente
+        cpf_paciente, id_alocacao_medico, id_forma_pagamento, id_atendente, valor_pago
     )
     VALUES (
         'agendada', NULL, 
-        p_cpf_paciente, p_id_alocacao_medico, p_id_forma_pagamento, p_id_atendente
+        p_cpf_paciente, p_id_alocacao_medico, p_id_forma_pagamento, p_id_atendente, v_valor_atual
     );
 END;
 $$;

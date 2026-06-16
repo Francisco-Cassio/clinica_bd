@@ -76,6 +76,7 @@ status VARCHAR NOT NULL CHECK(status='agendada' OR status='acontecendo' OR statu
 id_atendente INTEGER NOT NULL REFERENCES atendente(id_atendente),
 id_forma_pagamento INTEGER NOT NULL REFERENCES forma_pagamento(id_forma_pagamento),
 id_alocacao_medico INTEGER NOT NULL REFERENCES alocacao_medico(id_alocacao_medico)
+valor_pago NUMERIC(10,2) NOT NULL
 );
 
 
