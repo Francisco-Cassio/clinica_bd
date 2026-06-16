@@ -29,8 +29,8 @@ BEGIN
         RAISE EXCEPTION 'Bairro, cidade e estado do endereço são de preenchimento obrigatório.';
     END IF;
 
-    IF NOT fn_validar_cpf(p_cpf) THEN
-		RAISE EXCEPTION 'CPF inválido ou possui dígitos verificadores incorretos.'; 
+	IF length(p_cpf) <> 11 OR p_cpf IS NULL THEN
+		RAISE EXCEPTION 'O CPF do paciente é obrigatório e deve conter 11 dígitos.'; 
 	END IF;
     IF p_data_nascimento > CURRENT_DATE THEN 
 		RAISE EXCEPTION 'A data de nascimento não pode estar no futuro.'; 
