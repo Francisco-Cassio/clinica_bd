@@ -62,7 +62,9 @@ CREATE OR REPLACE PROCEDURE prcd_atualizar_paciente(
 LANGUAGE plpgsql 
 SECURITY DEFINER AS $$
 DECLARE
-    v_id_endereco INTEGER;
+    v_id_endereco_atual INTEGER;
+    v_total_usuarios_endereco INTEGER;
+    v_id_novo_endereco INTEGER;
 BEGIN
 	IF length(p_cpf) <> 11  OR p_cpf IS NULL THEN
 		RAISE EXCEPTION	'Informe o CPF do paciente';
@@ -84,28 +86,43 @@ BEGIN
 		RAISE EXCEPTION 'A data de nascimento não pode estar no futuro.'; 
 	END IF;
 
-    SELECT id_endereco INTO v_id_endereco FROM paciente WHERE cpf = p_cpf;
-    IF v_id_endereco IS NULL THEN 
+    SELECT id_endereco INTO v_id_endereco_atual FROM paciente WHERE cpf = p_cpf;
+    IF v_id_endereco_atual IS NULL THEN 
 		RAISE EXCEPTION 'Paciente com CPF % não encontrado.', p_cpf; 
 	END IF;
 
-    UPDATE endereco SET num_casa = p_num_casa, rua = p_rua, bairro = p_bairro, cidade = p_cidade, estado = p_estado 
-	WHERE id_endereco = v_id_endereco;
-    UPDATE paciente SET nome = p_nome, data_nascimento = p_data_nascimento, telefone = p_telefone, email = p_email, id_plano_saude = p_id_plano_saude 
-	WHERE cpf = p_cpf;
-END;
-$$;
+    SELECT COUNT(*) INTO v_total_usuarios_endereco FROM paciente WHERE id_endereco = v_id_endereco_atual;
 
+    IF v_total_usuarios_endereco > 1 THEN
+        INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
+        VALUES(p_num_casa, p_rua, p_bairro, p_cidade, p_estado)
+        RETURNING id_endereco INTO v_id_novo_endereco;
+        
+        UPDATE paciente 
+        SET nome = p_nome, 
+            data_nascimento = p_data_nascimento, 
+            telefone = p_telefone, 
+            email = p_email, 
+            id_plano_saude = p_id_plano_saude,
+            id_endereco = v_id_novo_endereco
+        WHERE cpf = p_cpf;
+    ELSE
+        UPDATE endereco 
+        SET num_casa = p_num_casa, 
+            rua = p_rua, 
+            bairro = p_bairro, 
+            cidade = p_cidade, 
+            estado = p_estado 
+		WHERE id_endereco = v_id_endereco_atual;
 
-CREATE OR REPLACE PROCEDURE prcd_deletar_paciente(p_cpf VARCHAR(11))
-LANGUAGE plpgsql 
-SECURITY DEFINER AS $$
-BEGIN
-	IF length(p_cpf) <> 11 OR p_cpf IS NULL THEN
-		RAISE EXCEPTION 'Informe um CPF válido';
-	END IF;
-
-	DELETE FROM paciente WHERE cpf = p_cpf;
+        UPDATE paciente 
+        SET nome = p_nome, 
+            data_nascimento = p_data_nascimento, 
+            telefone = p_telefone, 
+            email = p_email, 
+            id_plano_saude = p_id_plano_saude 
+		WHERE cpf = p_cpf;
+    END IF;
 END;
 $$;
 
@@ -247,6 +264,7 @@ LANGUAGE plpgsql
 SECURITY DEFINER AS $$
 DECLARE
     v_data_alocacao DATE;
+    v_valor_atual NUMERIC;
 BEGIN
     IF p_cpf_paciente IS NULL OR length(p_cpf_paciente) <> 11 THEN
         RAISE EXCEPTION 'O CPF do paciente é obrigatório e deve conter 11 dígitos.';
@@ -258,9 +276,12 @@ BEGIN
 	   		RAISE EXCEPTION 'Os IDs de alocação, forma de pagamento e atendente devem ser informados e válidos.';
     END IF;
 
-    SELECT data_alocacao INTO v_data_alocacao 
-    FROM alocacao_medico 
-    WHERE id_alocacao_medico = p_id_alocacao_medico;
+    SELECT am.data_alocacao, e.valor_consulta 
+    INTO v_data_alocacao, v_valor_atual
+    FROM alocacao_medico am
+    INNER JOIN medico m ON am.crm = m.crm
+    INNER JOIN especialidade e ON m.id_especialidade = e.id_especialidade
+    WHERE am.id_alocacao_medico = p_id_alocacao_medico;
 
     IF v_data_alocacao IS NULL THEN
         RAISE EXCEPTION 'A alocação médica informada (ID %) não existe no sistema.', p_id_alocacao_medico;
@@ -272,11 +293,11 @@ BEGIN
 
     INSERT INTO consulta (
         status, diagnostico, 
-        cpf_paciente, id_alocacao_medico, id_forma_pagamento, id_atendente
+        cpf_paciente, id_alocacao_medico, id_forma_pagamento, id_atendente, valor_pago
     )
     VALUES (
         'agendada', NULL, 
-        p_cpf_paciente, p_id_alocacao_medico, p_id_forma_pagamento, p_id_atendente
+        p_cpf_paciente, p_id_alocacao_medico, p_id_forma_pagamento, p_id_atendente, v_valor_atual
     );
 END;
 $$;

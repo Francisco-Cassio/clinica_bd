@@ -80,11 +80,10 @@ FOR EACH ROW
 EXECUTE FUNCTION fn_verificar_conflito_alocacao();
 
 
---trigger para verificar quem cancelou a consulta
+-- trigger para verificar quem cancelou a consulta
 CREATE OR REPLACE FUNCTION fn_auditar_cancelamento_consulta()
 RETURNS TRIGGER AS $$
 BEGIN
-
     IF OLD.status IS DISTINCT FROM NEW.status AND NEW.status = 'cancelada' THEN
         INSERT INTO auditoria_cancelamento (
             id_consulta, 
@@ -96,9 +95,8 @@ BEGIN
             NEW.id_consulta, 
             NEW.cpf_paciente, 
             CURRENT_TIMESTAMP, 
-            CURRENT_USER
+            CONCAT(CURRENT_USER, ' via ', COALESCE(NULLIF(current_setting('application_name', true), ''), 'Terminal/Aplicação'))
         );
-        
     END IF;
     RETURN NEW;
 END;

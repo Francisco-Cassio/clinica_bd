@@ -53,7 +53,7 @@ SELECT
     EXTRACT(MONTH FROM am.data_alocacao) AS mes, 
     e.nome_especialidade,
     COUNT(c.id_consulta) AS total_consultas_realizadas,
-    SUM(e.valor_consulta) AS faturamento_total
+    SUM(c.valor_pago) AS faturamento_total
 FROM consulta c
 INNER JOIN alocacao_medico am ON c.id_alocacao_medico = am.id_alocacao_medico
 INNER JOIN medico m ON am.crm = m.crm
