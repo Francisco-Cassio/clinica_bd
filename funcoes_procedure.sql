@@ -126,6 +126,21 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE prcd_deletar_paciente(p_cpf CHAR(11))
+LANGUAGE plpgsql 
+SECURITY DEFINER AS $$
+BEGIN
+    IF p_cpf IS NULL OR length(p_cpf) <> 11 THEN
+        RAISE EXCEPTION 'Informe um CPF de paciente válido com 11 dígitos para realizar a exclusão.';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM paciente WHERE cpf = p_cpf) THEN
+        RAISE EXCEPTION 'Paciente com o CPF % não foi encontrado no sistema.', p_cpf;
+    END IF;
+
+    DELETE FROM paciente WHERE cpf = p_cpf;
+END;
+$$;
 
 
 -- Procedures para inserir/atualizar/deletar médico
