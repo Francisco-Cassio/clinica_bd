@@ -327,6 +327,34 @@ BEGIN
 END;
 $$;
 
+CREATE OR REPLACE PROCEDURE prcd_iniciar_consulta(
+    p_id_consulta INTEGER
+)
+LANGUAGE plpgsql 
+SECURITY DEFINER AS $$
+DECLARE
+    v_status_atual VARCHAR;
+BEGIN
+    IF p_id_consulta IS NULL OR p_id_consulta <= 0 THEN
+        RAISE EXCEPTION 'Informe um ID de consulta válido.';
+    END IF;
+
+    SELECT status INTO v_status_atual FROM consulta WHERE id_consulta = p_id_consulta;
+
+    IF v_status_atual IS NULL THEN
+        RAISE EXCEPTION 'Consulta com ID % não encontrada no sistema.', p_id_consulta;
+    END IF;
+
+    IF v_status_atual <> 'agendada' THEN
+        RAISE EXCEPTION 'Não é possível iniciar esta consulta. Status atual é "%". Apenas consultas "agendadas" podem ser iniciadas.', v_status_atual;
+    END IF;
+
+    UPDATE consulta 
+    SET status = 'acontecendo'
+    WHERE id_consulta = p_id_consulta;
+END;
+$$;
+
 CREATE OR REPLACE PROCEDURE prcd_encerrar_consulta(
     p_id_consulta INTEGER,
     p_diagnostico VARCHAR
