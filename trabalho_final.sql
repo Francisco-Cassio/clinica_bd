@@ -11,8 +11,9 @@ nome VARCHAR NOT NULL
 
 CREATE TABLE consultorio(
 id_consultorio SERIAL NOT NULL PRIMARY KEY,
-num INTEGER,
-andar INTEGER
+num INTEGER NOT NULL,
+andar INTEGER NOT NULL,
+CONSTRAINT uq_consultorio_sala_andar UNIQUE(num, andar)
 );
 
 CREATE TABLE endereco(
