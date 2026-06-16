@@ -3,7 +3,7 @@ SELECT
     p.cpf AS cpf_paciente,
     p.nome AS nome_paciente,
     EXTRACT(YEAR FROM age(CURRENT_DATE, p.data_nascimento)) AS idade,
-    c.data_consulta,
+    am.data_alocacao AS data_consulta,
     m.nome AS medico_responsavel,
     e.nome_especialidade AS especialidade,
     c.diagnostico
@@ -20,14 +20,15 @@ INNER JOIN
 WHERE 
     c.status = 'realizada'
 ORDER BY 
-    c.data_consulta DESC;
+    am.data_alocacao DESC;
 
-	
+
 CREATE OR REPLACE VIEW vw_agenda_diaria AS
 SELECT 
     c.id_consulta,
-    c.data_consulta,
-    c.hora_consulta,
+    am.data_alocacao AS data_consulta, 
+    am.horario_entrada,               
+    am.horario_saida,                 
     p.nome AS nome_paciente,
     p.telefone AS telefone_paciente,
     m.nome AS nome_medico,
@@ -41,13 +42,15 @@ INNER JOIN alocacao_medico am ON c.id_alocacao_medico = am.id_alocacao_medico
 INNER JOIN medico m ON am.crm = m.crm
 INNER JOIN especialidade e ON m.id_especialidade = e.id_especialidade
 INNER JOIN consultorio con ON am.id_consultorio = con.id_consultorio
-ORDER BY c.data_consulta ASC, c.hora_consulta ASC;
+ORDER BY am.data_alocacao ASC, am.horario_entrada ASC;
 
+
+DROP MATERIALIZED VIEW IF EXISTS mvw_faturamento_gerencial;
 
 CREATE MATERIALIZED VIEW mvw_faturamento_gerencial AS
 SELECT 
-    EXTRACT(YEAR FROM c.data_consulta) AS ano,
-    EXTRACT(MONTH FROM c.data_consulta) AS mes,
+    EXTRACT(YEAR FROM am.data_alocacao) AS ano,
+    EXTRACT(MONTH FROM am.data_alocacao) AS mes, 
     e.nome_especialidade,
     COUNT(c.id_consulta) AS total_consultas_realizadas,
     SUM(e.valor_consulta) AS faturamento_total
@@ -56,10 +59,8 @@ INNER JOIN alocacao_medico am ON c.id_alocacao_medico = am.id_alocacao_medico
 INNER JOIN medico m ON am.crm = m.crm
 INNER JOIN especialidade e ON m.id_especialidade = e.id_especialidade
 WHERE c.status = 'realizada'
-GROUP BY EXTRACT(YEAR FROM c.data_consulta), EXTRACT(MONTH FROM c.data_consulta), e.nome_especialidade
+GROUP BY EXTRACT(YEAR FROM am.data_alocacao), EXTRACT(MONTH FROM am.data_alocacao), e.nome_especialidade
 ORDER BY ano DESC, mes DESC, faturamento_total DESC;
-
-REFRESH MATERIALIZED VIEW mvw_faturamento_gerencial;
 
 
 CREATE OR REPLACE VIEW vw_relatorio_evasao AS
