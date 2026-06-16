@@ -238,8 +238,6 @@ $$;
 
 -- Procedures para agendar/encerrar/cancelar consulta
 CREATE OR REPLACE PROCEDURE prcd_agendar_consulta(
-    p_data_consulta DATE,
-    p_hora_consulta TIME,
     p_cpf_paciente CHAR(11),
     p_id_alocacao_medico INTEGER,
     p_id_forma_pagamento INTEGER,
@@ -247,15 +245,9 @@ CREATE OR REPLACE PROCEDURE prcd_agendar_consulta(
 )
 LANGUAGE plpgsql 
 SECURITY DEFINER AS $$
+DECLARE
+    v_data_alocacao DATE;
 BEGIN
-    IF p_data_consulta IS NULL OR p_hora_consulta IS NULL THEN
-        RAISE EXCEPTION 'A data e o horário da consulta são de preenchimento obrigatório.';
-    END IF;
-    
-    IF p_data_consulta < CURRENT_DATE THEN
-        RAISE EXCEPTION 'Não é possível agendar consultas para datas que já passaram.';
-    END IF;
-
     IF p_cpf_paciente IS NULL OR length(p_cpf_paciente) <> 11 THEN
         RAISE EXCEPTION 'O CPF do paciente é obrigatório e deve conter 11 dígitos.';
     END IF;
@@ -266,17 +258,28 @@ BEGIN
 	   		RAISE EXCEPTION 'Os IDs de alocação, forma de pagamento e atendente devem ser informados e válidos.';
     END IF;
 
+    SELECT data_alocacao INTO v_data_alocacao 
+    FROM alocacao_medico 
+    WHERE id_alocacao_medico = p_id_alocacao_medico;
+
+    IF v_data_alocacao IS NULL THEN
+        RAISE EXCEPTION 'A alocação médica informada (ID %) não existe no sistema.', p_id_alocacao_medico;
+    END IF;
+
+    IF v_data_alocacao < CURRENT_DATE THEN
+        RAISE EXCEPTION 'Não é possível agendar consultas para alocações em datas que já passaram.';
+    END IF;
+
     INSERT INTO consulta (
-        data_consulta, hora_consulta, status, diagnostico, 
+        status, diagnostico, 
         cpf_paciente, id_alocacao_medico, id_forma_pagamento, id_atendente
     )
     VALUES (
-        p_data_consulta, p_hora_consulta, 'agendada', NULL, 
+        'agendada', NULL, 
         p_cpf_paciente, p_id_alocacao_medico, p_id_forma_pagamento, p_id_atendente
     );
 END;
 $$;
-
 
 CREATE OR REPLACE PROCEDURE prcd_encerrar_consulta(
     p_id_consulta INTEGER,
@@ -348,7 +351,8 @@ $$;
 -- Procedure para alocar médicos
 CREATE OR REPLACE PROCEDURE prcd_inserir_alocacao_medico(
     p_data_alocacao DATE,
-    p_horario TIME,
+    p_horario_entrada TIME,
+    p_horario_saida TIME,
     p_id_consultorio INTEGER,
     p_crm VARCHAR
 )
@@ -363,16 +367,20 @@ BEGIN
         RAISE EXCEPTION 'Informe um ID de consultório válido.';
     END IF;
 
-    IF p_data_alocacao IS NULL OR p_horario IS NULL THEN
-        RAISE EXCEPTION 'A data e o horário da alocação são obrigatórios.';
-    END IF;
+    IF p_data_alocacao IS NULL OR p_horario_entrada IS NULL OR p_horario_saida IS NULL THEN
+    	RAISE EXCEPTION 'A data e os horários da alocação são obrigatórios.';
+	END IF;
+
+	IF p_horario_saida <= p_horario_entrada THEN
+		RAISE EXCEPTION 'O horário de saída não pode ser menor ou igual ou horário de entrada!';
+	END IF;
 
     IF p_data_alocacao < CURRENT_DATE THEN
         RAISE EXCEPTION 'Não é possível alocar um médico para uma data no passado.';
     END IF;
     
-    INSERT INTO alocacao_medico (data_alocacao, horario, id_consultorio, crm) 
-    VALUES (p_data_alocacao, p_horario, p_id_consultorio, p_crm);
+    INSERT INTO alocacao_medico (data_alocacao, horario_entrada, horario_saida, id_consultorio, crm) 
+    VALUES (p_data_alocacao, p_horario_entrada, p_horario_saida, p_id_consultorio, p_crm);
 END;
 $$;
 
