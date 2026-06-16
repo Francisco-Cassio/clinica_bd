@@ -108,3 +108,18 @@ CREATE TRIGGER tg_auditar_cancelamento
 AFTER UPDATE ON consulta
 FOR EACH ROW
 EXECUTE FUNCTION fn_auditar_cancelamento_consulta();
+
+-- trigger para atualizar o faturamento gerencial automaticamente
+CREATE OR REPLACE FUNCTION fn_atualizar_mvw_faturamento()
+RETURNS TRIGGER AS $$
+BEGIN
+    REFRESH MATERIALIZED VIEW mvw_faturamento_gerencial;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER tg_atualizar_faturamento
+AFTER UPDATE ON consulta
+FOR EACH ROW
+WHEN (NEW.status = 'realizada')
+EXECUTE FUNCTION fn_atualizar_mvw_faturamento();
