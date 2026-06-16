@@ -308,6 +308,8 @@ CREATE OR REPLACE PROCEDURE prcd_encerrar_consulta(
 )
 LANGUAGE plpgsql 
 SECURITY DEFINER AS $$
+DECLARE
+    v_status_atual VARCHAR;
 BEGIN
     IF p_id_consulta IS NULL OR p_id_consulta <= 0 THEN
         RAISE EXCEPTION 'Informe um ID de consulta válido.';
@@ -315,6 +317,16 @@ BEGIN
 
     IF trim(p_diagnostico) = '' OR p_diagnostico IS NULL THEN
         RAISE EXCEPTION 'A consulta não pode ser encerrada sem um diagnóstico válido preenchido.';
+    END IF;
+
+    SELECT status INTO v_status_atual FROM consulta WHERE id_consulta = p_id_consulta;
+
+    IF v_status_atual IS NULL THEN
+        RAISE EXCEPTION 'Consulta com ID % não encontrada no sistema.', p_id_consulta;
+    END IF;
+
+    IF v_status_atual NOT IN ('agendada', 'acontecendo') THEN
+        RAISE EXCEPTION 'Não é possível encerrar esta consulta. Status atual é "%". Apenas consultas "agendadas" ou "acontecendo" podem ser encerradas.', v_status_atual;
     END IF;
 
     UPDATE consulta 
