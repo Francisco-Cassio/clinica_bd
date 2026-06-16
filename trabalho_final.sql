@@ -82,7 +82,7 @@ valor_pago NUMERIC(10,2) NOT NULL
 
 CREATE TABLE auditoria_cancelamento (
 id_auditoria SERIAL PRIMARY KEY,
-id_consulta INTEGER NOT null REFERENCES consulta(id_consulta) ON DELETE CASCADE,
+id_consulta INTEGER NOT NULL,
 cpf_paciente CHAR(11) NOT NULL,
 data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 usuario_responsavel VARCHAR(50) NOT NULL
