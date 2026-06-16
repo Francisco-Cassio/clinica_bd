@@ -186,6 +186,10 @@ BEGIN
 		RAISE EXCEPTION 'O nome do médico não pode estar vazio.'; 
 	END IF;
 	
+    IF NOT EXISTS (SELECT 1 FROM medico WHERE crm = p_crm) THEN
+        RAISE EXCEPTION 'Médico com o CRM % não foi encontrado no sistema.', p_crm;
+    END IF;
+	
     UPDATE medico SET nome = p_nome, id_especialidade = p_id_especialidade WHERE crm = p_crm;
 END;
 $$;
@@ -244,10 +248,14 @@ BEGIN
 		RAISE EXCEPTION 'Insira um salário válido';
 	END IF;
 	
+    IF NOT EXISTS (SELECT 1 FROM atendente WHERE id_atendente = p_id_atendente) THEN
+        RAISE EXCEPTION 'Atendente com ID % não foi encontrado para reajuste salarial.', p_id_atendente;
+    END IF;
+	
     UPDATE atendente 
     SET salario = p_novo_salario
     WHERE id_atendente = p_id_atendente;
-end;
+END;
 $$;
 
 
@@ -261,6 +269,10 @@ BEGIN
 	IF p_novo_expediente NOT IN ('m', 'v') OR p_novo_expediente IS NULL THEN
 		RAISE EXCEPTION 'Informe um expediente válido';
 	END IF;
+
+    IF NOT EXISTS (SELECT 1 FROM atendente WHERE id_atendente = p_id_atendente) THEN
+        RAISE EXCEPTION 'Atendente com ID % não foi encontrado para alteração de expediente.', p_id_atendente;
+    END IF;
 
 	UPDATE atendente
 	SET expediente = p_novo_expediente
