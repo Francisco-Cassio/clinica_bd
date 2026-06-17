@@ -22,7 +22,7 @@ insert into especialidade (nome_especialidade, valor_consulta) values
 ('ortopedia', 220.00);
 
 insert into endereco (num_casa, rua, bairro, cidade, estado) values
-(123, 'rua das flores', 'centro', 'timon', 'ma'),
-(456, 'avenida piauí', 'são benedito', 'timon', 'ma');
+(123, 'rua das flores', 'centro', 'timon', 'MA'),
+(456, 'avenida piauí', 'são benedito', 'timon', 'MA');
 
 insert into plano_saude (nome) values ('particular');

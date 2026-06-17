@@ -45,7 +45,7 @@ BEGIN
       AND lower(trim(estado)) = lower(trim(p_estado));
 	
 	IF v_id_endereco IS NULL THEN
-        INSERT INTO endereco(num_casa, rua, bairro, city, estado)
+        INSERT INTO endereco(num_casa, rua, bairro, cidade, estado)
         VALUES(p_num_casa, p_rua, p_bairro, p_cidade, upper(trim(p_estado)))
         RETURNING id_endereco INTO v_id_endereco;
     END IF;
