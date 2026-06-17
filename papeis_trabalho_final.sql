@@ -5,6 +5,7 @@ CREATE ROLE dba_clinica WITH LOGIN SUPERUSER PASSWORD 'senhaDBA2026';
 
 REVOKE INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public FROM PUBLIC;
 REVOKE EXECUTE ON ALL FUNCTIONS IN SCHEMA public FROM PUBLIC;
+REVOKE EXECUTE ON ALL PROCEDURES IN SCHEMA public FROM PUBLIC;
 
 GRANT SELECT ON paciente, medico, consultorio, alocacao_medico, consulta, especialidade, plano_saude, forma_pagamento, endereco TO atendente;
 GRANT SELECT ON auditoria_cancelamento TO atendente;
