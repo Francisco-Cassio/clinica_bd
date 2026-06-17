@@ -90,7 +90,7 @@ id_auditoria SERIAL PRIMARY KEY,
 id_consulta INTEGER REFERENCES consulta(id_consulta) ON DELETE SET NULL,
 cpf_paciente CHAR(11) NOT NULL REFERENCES paciente(cpf),
 data_cancelamento TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-usuario_responsavel VARCHAR(50) NOT NULL
+usuario_responsavel VARCHAR(150) NOT null
 );
 
 
